@@ -1,0 +1,22 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=909
+
+Vim file plugin for editing files with unicode codes.
+
+It changes all of the codes to the accented characters for viewing, and turns all accented characters into the code when writing.
+
+e.g. it changes \u00E9 to é when viewing, and puts \u00E9 when writing (java-style encoding). Set g:ucs_encode_java (in your .vimrc file)
+
+By default, it works for all the accented characters in the Unicode Latin-1 supplement, but you can quickly change it for your needs.
+
+You can also set it to work with html encoding (&#nnn;). Set g:ucs_encode_html (in your .vimrc file)
+
+You can also set it to convert accented characters to octal encoding ( \340 ). Set g:ucs_encode_octal in your
+.vimrc file
+
+
+If you want to turn the switching on and off for reading and/or writing, you can easily do so by commenting out the autocmd lines.  e.g. if you comment out the BufWrite autocmds, then you can read in \u00aa style and write out the utf encoding.  Or, you could swap the BufRead and BufWrite commands, and do the opposite transformation.
+
+for help with the accented characters, see :help digraph
+
+copied/mangled from vimscript #284, which does it for TeX codes
+
