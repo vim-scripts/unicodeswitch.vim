@@ -10,8 +10,8 @@
 " Usage: put in your $VIMDIR/plugin directory, set one of the variables
 " 	either g:ucs_encode_java = 1 or g:ucs_encode_html = 1 in your .vimrc
 " 	or override any of the ucs_ variables if you like
-" Last Change: $Date: 2004/04/29 14:40:10 $
-" Version: $Revision: 1.5 $ 
+" Last Change: $Date: 2004/06/01 12:55:59 $
+" Version: $Revision: 1.6 $ 
 " Maintainer: Roger Pilkey (rpilkey at magma.ca)
 
 "Startup stuff {{{1
@@ -37,7 +37,7 @@ endif
 if exists('g:ucs_encode_java')
 	let s:ucs_prefix = '\\u'
 	"matches a hex number
-	let s:ucs_encodematch = '\x*'
+	let s:ucs_encodematch = '\x\{1,4}'
 	let s:ucs_suffix = ''
 	let s:ucs_is_hex = 1
 	let s:ucs_filetype = '*.properties,*.java'
@@ -170,4 +170,4 @@ function s:toUTF8()
 	call cursor(s:line,s:column)
 endfunction
 
-" vim600:tw=78:set fdm=marker:
+" vim600:tw=78:set fdm=marker:set fileformat=unix
