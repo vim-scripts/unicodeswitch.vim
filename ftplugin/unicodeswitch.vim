@@ -1,14 +1,17 @@
 " Vim file plugin for editing files with unicode codes.
 " It changes \u00E9 to é when viewing, and puts \u00E9 when writing. Set g:ucs_encode_java 
+" in your .vimrc
 "
-" You can also set it to work with html encoding (&#nnn; ). Set g:ucs_encode_html 
+" You can also set it to work with html encoding (&#nnn; ). Set g:ucs_encode_html in your
+" .vimrc
 " for help with the accented characters, see :help digraph
 " copied/mangled from a script on www.vim.org that did it for TeX codes
 "
 " Usage: put in your $VIMDIR/plugin directory, set one of the variables
-" 	either g:ucs_encode_java = 1 or g:ucs_encode_html = 1
-" Last Change: $Date: 2004/02/19 14:40:10 $
-" Version: $Revision: 1.3 $ 
+" 	either g:ucs_encode_java = 1 or g:ucs_encode_html = 1 in your .vimrc
+" 	or override any of the ucs_ variables if you like
+" Last Change: $Date: 2004/04/29 14:40:10 $
+" Version: $Revision: 1.5 $ 
 " Maintainer: Roger Pilkey (rpilkey at magma.ca)
 
 "Startup stuff {{{1
@@ -30,14 +33,11 @@ endif
 "
 " Or make your own bunch of settings following these as examples.
 "
-" If you want both encodings at the same time, I thought of that, but
-" I don't know how to do it in one script.  Any ideas gladly accepted.
-"
 " g:ucs_encode_java: load all the settings for "\u00AA" java-style encoding {{{2
 if exists('g:ucs_encode_java')
-	let s:ucs_prefix = '\\u00'
-	"matches any two chars
-	let s:ucs_encodematch = '..'
+	let s:ucs_prefix = '\\u'
+	"matches a hex number
+	let s:ucs_encodematch = '\x*'
 	let s:ucs_suffix = ''
 	let s:ucs_is_hex = 1
 	let s:ucs_filetype = '*.properties,*.java'
@@ -83,7 +83,8 @@ endif
 if exists('g:ucs_charlist')
 	let s:ucs_charlist = g:ucs_charlist
 else
-	let s:ucs_charlist = 'à\|á\|â\|ã\|ä\|å\|æ\|è\|é\|ê\|ë\|ì\|í\|î\|ï\|ò\|ó\|ô\|õ\|ö\|ù\|ú\|û\|ü\|ý\|ÿ\|¿\|¡\|ñ\|ß\|ç\|«\|»'
+	"use a character class to search, it's a bit faster than alternation
+	let s:ucs_charlist = '[àáâãäåæèéêëìíîïòóôõöùúûüýÿ¿¡ñßçšž«»]'
 endif
 
 " Hook the functions to the Read/Write events {{{1
@@ -92,6 +93,24 @@ augroup unicodeswitch
 	exe "autocmd BufWritePre " . s:ucs_filetype . " call s:toUnicode()"
 	exe "autocmd BufWritePost " . s:ucs_filetype . " call s:toUTF8()"
 augroup END
+
+" function: ZeroExtend(string) returns the zero-extended string of a string. {{{1
+func s:ZeroExtend(str)
+	let l:retval = a:str
+	let l:len = strlen(l:retval)
+	if (l:len == 3)
+		let l:retval = "0".l:retval
+	elseif (l:len == 2)
+		let l:retval = "00".l:retval
+	elseif (l:len == 1)
+		let l:retval = "000".l:retval
+	elseif (l:len == 0)
+		let l:retval = "0000"
+	else
+		"I give up, the string is supposed to only be 4 chars long
+	endif	
+	return l:retval
+endfunc
 
 " function: Nr2Hex(nr) returns the Hex string of a number. {{{1
 func s:Nr2Hex(nr)
@@ -111,18 +130,18 @@ function s:toUnicode()
 	let s:column = col(".")
 	" convert SPECIFIED utf-8 symbols to unicode codes
 	if s:ucs_is_hex
-		silent exec ":%s/\\(".s:ucs_charlist."\\)/\\='".s:ucs_prefix."'.s:Nr2Hex(char2nr(submatch(1))).'".s:ucs_suffix."'/ieg"
+		silent exec ":%s/\\(".s:ucs_charlist."\\)/\\='".s:ucs_prefix."'.s:ZeroExtend(s:Nr2Hex(char2nr(submatch(1)))).'".s:ucs_suffix."'/ieg"
 	else
-		silent exec ":%s/\\(".s:ucs_charlist."\\)/\\='".s:ucs_prefix."'.char2nr(submatch(1)).'".s:ucs_suffix."'/ieg"
+		silent exec ":%s/\\(".s:ucs_charlist."\\)/\\='".s:ucs_prefix."'.s:ZeroExtend(char2nr(submatch(1))).'".s:ucs_suffix."'/ieg"
 	endif
 	"default to something
-	if !exists(s:oldencoding)
+	if !exists('s:oldencoding')
 		let s:oldencoding = &l:fileencoding
 	endif
-	if !exists(s:line)
+	if !exists('s:line')
 		let s:line = line(".")
 	endif
-	if !exists(s:column)
+	if !exists('s:column')
 		let s:column = col(".")
 	endif
 
@@ -140,8 +159,6 @@ function s:toUTF8()
 
 	" store the fileencoding
 	let s:oldencoding = &l:fileencoding
-	" set the encoding to utf-8
-	set fileencoding=utf-8
 
 	" convert ALL unicode codes to utf-8 symbols (watch out!)
 	if s:ucs_is_hex
