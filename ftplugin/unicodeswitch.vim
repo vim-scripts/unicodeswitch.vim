@@ -45,7 +45,7 @@ function s:toUnicode()
 	let s:line = line(".")
 	let s:column = col(".")
 	" convert specified utf-8 symbols to unicode codes
-	silent %s/\(à\|á\|â\|ã\|ä\|å\|æ\|è\|é\|ê\|ë\|ì\|í\|î\|ï\|ò\|ó\|ô\|õ\|ö\|ù\|ú\|û\|ü\|ý\|ÿ\|¿\|¡\|ñ\|ß\|ç\|«\|»\)/\='\\u00'.Nr2Hex(char2nr(submatch(1)))/eg
+	silent %s/\(à\|á\|â\|ã\|ä\|å\|æ\|è\|é\|ê\|ë\|ì\|í\|î\|ï\|ò\|ó\|ô\|õ\|ö\|ù\|ú\|û\|ü\|ý\|ÿ\|¿\|¡\|ñ\|ß\|ç\|«\|»\)/\='\\u00'.s:Nr2Hex(char2nr(submatch(1)))/eg
 	" restore old encoding before writing
 	let &l:fileencoding = s:oldencoding
 	" restore cursor position
